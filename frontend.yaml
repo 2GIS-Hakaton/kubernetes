@@ -5,6 +5,7 @@ metadata:
   namespace: prod
   name: frontend
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: frontend
