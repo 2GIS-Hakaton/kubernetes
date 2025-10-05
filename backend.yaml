@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prod
+  name: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/2gis-hakaton/backend:latest
+          imagePullPolicy: Always
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: db
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: host
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: database-url
+            - name: YANDEX_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: yandex-api-key
+            - name: YANDEX_FOLDER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: yandex-folder-id
+            - name: YANDEX_SEARCH_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: yandex-search-user
+            - name: YANDEX_SEARCH_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: yandex-search-key
+            - name: YANDEX_VOICE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: yandex-voice
+            - name: GAPIS_KEY_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: gapis-key-file
+            - name: GAPIS_APP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: gapis-app-id
+            - name: GAPIS_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-keys
+                  key: gapis-api-key
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prod
+  name: backend-svc
+spec:
+  type: NodePort
+  selector:
+    app: backend
+  ports:
+    - port: 30102
+      nodePort: 30102
+      targetPort: web

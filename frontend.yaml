@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prod
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/2gis-hakaton/frontend:latest
+          imagePullPolicy: Always
+          env:
+            - name: VITE_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-keys
+                  key: vite-api-base-url
+            - name: VITE_2GIS_MAP_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-keys
+                  key: vite-2gis-map-api-key
+            - name: VITE_2GIS_DIRECTIONS_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-keys
+                  key: vite-2gis-directions-api-key
+            - name: VITE_2GIS_APP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-keys
+                  key: vite-2gis-app-id
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prod
+  name: frontend-svc
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 30103
+      nodePort: 30103
+      targetPort: web

@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: prod
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-cm
+                  key: db
+          ports:
+            - containerPort: 5432
+              name: db
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prod
+  name: postgres-cm
+data:
+  host: 51.250.86.178
+  user: nike
+  password: changeme
+  db: audioguid
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prod
+  name: postgres-svc
+spec:
+  type: NodePort
+  selector:
+    app: postgres
+  ports:
+    - port: 30101
+      nodePort: 30101
+      targetPort: db
+      protocol: TCP
